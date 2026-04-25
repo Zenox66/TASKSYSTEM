@@ -1,55 +1,144 @@
 <?php
 
-class Database
+require_once __DIR__ . '/Database.php';
+
+abstract class Model
 {
-    // Singleton instance
-    private static ?Database $instance = null;
+    protected $db;
+    protected $table;
 
-    // mysqli connection
-    private mysqli $connection;
-
-    // Private constructor (only this class can create instance)
-    private function __construct()
+    public function __construct()
     {
-        // Load DB config
-        $config = require __DIR__ . '/../Config/database.php';
-
-        // Create MySQLi connection
-        $this->connection = new mysqli(
-            $config['host'],
-            $config['username'],
-            $config['password'],
-            $config['database'],
-            $config['port'] ?? 3306
-        );
-
-        // Check for connection errors
-        if ($this->connection->connect_error) {
-            die('Database connection failed: ' . $this->connection->connect_error);
-        }
-
-        // Set charset
-        $this->connection->set_charset('utf8mb4');
+        $this->db = Database::getInstance();
     }
 
     /**
-     * Get the single Database instance
-     * @return mysqli
+     * Get all records
      */
-    public static function getInstance(): mysqli
+    public function all()
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
+        $stmt = $this->db->query("SELECT * FROM {$this->table}");
+        return $stmt->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Find by ID
+     */
+    public function find(int $id)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT * FROM {$this->table} WHERE id = ? LIMIT 1"
+        );
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_assoc();
+    }
+
+    protected function findColumn(string $column, $value): array
+    {
+        $sql = "SELECT * FROM {$this->table} WHERE {$column} = ?";
+        $stmt = $this->db->prepare($sql);
+
+        // Auto-detect type
+        $type = is_int($value) ? 'i' : 's';
+        $stmt->bind_param($type, $value);
+
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function countAll(): int
+    {
+        $result = $this->db->query("SELECT COUNT(*) as cnt FROM {$this->table}");
+        $row = $result->fetch_assoc();
+        return (int)$row['cnt'];
+    }
+
+    public function countBy(string $column, $value): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM {$this->table} WHERE {$column} = ?");
+        $type = is_int($value) ? "i" : "s";
+        $stmt->bind_param($type, $value);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        return (int)$row['cnt'];
+    }
+
+    /**
+     * Delete by ID
+     */
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM {$this->table} WHERE id = ?"
+        );
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }
+
+    public function where(string $column, $value): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE {$column} = ?");
+        $type = is_int($value) ? "i" : "s";
+        $stmt->bind_param($type, $value);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        return $res->fetch_all(MYSQLI_ASSOC);
+    }
+
+    protected function insert(array $data): bool
+    {
+        $columns = implode(',', array_keys($data));
+        $placeholders = implode(',', array_fill(0, count($data), '?'));
+
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})"
+        );
+
+        $types = str_repeat('s', count($data));
+        $values = array_values($data);
+
+        // bind_param requires arguments by reference
+        $bindParams = array_merge([$types], $values);
+        $refs = array();
+        foreach ($bindParams as $key => $value) {
+            $refs[$key] = &$bindParams[$key];
         }
-        return self::$instance->connection;
+        call_user_func_array([$stmt, 'bind_param'], $refs);
+
+        return $stmt->execute();
     }
 
-    // Prevent cloning
-    private function __clone() {}
-
-    // Prevent unserializing
-    public function __wakeup()
+    /**
+     * Update data by ID
+     */
+    protected function update(int $id, array $data): bool
     {
-        throw new Exception("Cannot unserialize singleton Database");
+        $set = implode(
+            ', ',
+            array_map(fn($key) => "{$key} = ?", array_keys($data))
+        );
+
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET {$set} WHERE id = ?"
+        );
+
+        $types = str_repeat('s', count($data)) . 'i';
+        $values = array_values($data);
+        $values[] = $id;
+
+        // bind_param requires references
+        $bindParams = array_merge([$types], $values);
+        $refs = array();
+        foreach ($bindParams as $key => $value) {
+            $refs[$key] = &$bindParams[$key];
+        }
+        call_user_func_array([$stmt, 'bind_param'], $refs);
+
+        return $stmt->execute();
     }
+
+
 }
