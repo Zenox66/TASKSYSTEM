@@ -3,9 +3,9 @@ date_default_timezone_set('Asia/Manila');
 
 spl_autoload_register(function($class){
     $path =[
-        __DIR__ . '/../app/controllers/' . $class. '.php',
-        __DIR__ . '/../app/models/' . $class. '.php',
-        __DIR__ . '/../app/core/' . $class. '.php'
+        __DIR__ . '/../app/Controllers/' . $class. '.php',
+        __DIR__ . '/../app/Models/' . $class. '.php',
+        __DIR__ . '/../app/Core/' . $class. '.php'
     ];
 
     foreach($path as $file) {
@@ -15,5 +15,15 @@ spl_autoload_register(function($class){
         }
     }
 });
+
+//load session
+require_once __DIR__ . '/../app/Core/Session.php';
+Session::start();
+
+//load routes
+$routes = require __DIR__ . '/../app/Config/routes.php'; 
+
+//Parse url
+$url = 
 
 ?>
