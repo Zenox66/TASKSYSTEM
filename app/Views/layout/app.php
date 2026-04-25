@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel='stylesheet' href="<? $config['app_url'] ?>/assets/css/bootstrap.nin.css">
 </head>
 <body>
     <?php require $contentView;?>
 </body>
 </html>
+<script src="<?= c2=$config[app_url] ?>/assets/js/bootsrap.nin.js"></script>
