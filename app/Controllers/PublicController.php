@@ -10,5 +10,10 @@ class PublicController extends Controller{
     public function index(){
         $this->view('auth/login');
     }
-
+    public function login(){
+        $this->view('auth/login');
+    }
+    public function register(){
+        $this->view('auth/registration');
+    }
 }
