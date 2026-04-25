@@ -6,12 +6,4 @@ return[
     '/register' => 'Public@register',
     '/logout' => 'Public@logout',
 ];
-
-
-
-
-
-
-
-
 ?>
