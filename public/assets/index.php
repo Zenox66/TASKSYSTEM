@@ -39,4 +39,25 @@ if(!isset($routes[$url])) {
     exit;
 }
 
+//get controller and method
+$route = explode('@', $routes[$url]);
+$controllerName = $route[0] . 'Controller';
+$methodName = $route[1] ?? 'index';
+
+//check if controller exists
+if(!class_exists($controllerName)){
+    http_response_code(500);
+    echo "<h1>Error: Controller {$controllerName} not found :(</h1>"
+    exit;
+}
+
+$controller = new $controllerName();
+if(!method_exists($controller, $methodName)){
+    http_response_code(500);
+    echo "<h1>Error: Method {$methodName} not found in controller {$controllerName} :(</h1>"
+    exit;
+}
+$controller->methodName();
+
+
 ?>
