@@ -24,6 +24,19 @@ Session::start();
 $routes = require __DIR__ . '/../app/Config/routes.php'; 
 
 //Parse url
-$url = 
+$url = $_GET['url'] ?? '';
+$url = '/' . trim($url, '/');
+
+//remove /public from url
+if(str_starts_with($url, '/public')){
+    $url = substr($url, 7);
+}
+
+//match route
+if(!isset($routes[$url])) {
+    https_response_code(404);
+    require_once __DIR__ . '/../app/Views/404.php';
+    exit;
+}
 
 ?>
