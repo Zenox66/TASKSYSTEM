@@ -1,5 +1,4 @@
 <?php
-
 return[
     'host' => 'localhost',
     'username' => 'root',
@@ -8,5 +7,3 @@ return[
     'port' => 3306,
     'charset' => 'utf8mb4',
 ];
-
-?>
