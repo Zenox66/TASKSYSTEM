@@ -1,5 +1,5 @@
 App
-    - Most Functions.
+- Most Functions.
 
     Config
     - Config - Settings for your Application
