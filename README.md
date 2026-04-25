@@ -15,8 +15,9 @@ App
     - Model -> Databases
     - View -> HTML -> Input/Button 
     - Controller
+
     ^ All are interconnected and rely on each other ^
-    
+
     Models
     - 
 
